@@ -35,35 +35,12 @@ void scanNetwork() {
 
 int main() {
 	IP_Header a;
-	populateDefault(&a);
+	ICMP_Header i;
 
 	a.total_len += htons(sizeof ICMP_Header);
 	a.proto = IPPROTO_ICMP;
 	a.header_chksum = 0x0000;
 	a.header_chksum = header_checksum(&a, a.ihl * 4);
-
-
-
-
-	ICMP_Header i;
-	populateDefault(&i);
-
-
-
-	cout << endl;
-
-
-
-
-	cout << "-------------------IP Header-------------------" << endl;
-	displayHeader(&a);
-	display(&a, sizeof IP_Header);
-	cout << endl;
-	cout << "------------------ICMP Header------------------" << endl;
-
-	displayHeader(&i);
-	display(&i, sizeof ICMP_Header);
-
 
 
 
@@ -73,8 +50,23 @@ int main() {
 	memcpy(packet, &a, sizeof IP_Header);
 	memcpy(packet + sizeof IP_Header, &i, sizeof ICMP_Header);
 
+
+
+
+
+
+
+
+
+	cout << a;
+	display(&a, sizeof IP_Header);
+
 	cout << endl;
-	cout << "------------------IP + ICMP------------------" << endl;
+
+	cout << i;
+	display(&i, sizeof ICMP_Header);
+
+	cout << endl << "------------------IP + ICMP--------------------";
 	display(packet, packsize);
 
 
@@ -82,7 +74,7 @@ int main() {
 
 
 
-	WSADATA wsaData;
+	/*WSADATA wsaData;
 	WSAStartup(MAKEWORD(2, 2), &wsaData);
 
 
@@ -108,7 +100,7 @@ int main() {
 
 
 
-
+	*/
 
 
 

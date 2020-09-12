@@ -3,7 +3,6 @@
 #include <WS2tcpip.h>
 #include <iostream>
 #include <iomanip>
-#include <vector>
 #pragma comment(lib,"Ws2_32.lib")
 
 #define IP_FLAG_NONE 0
@@ -87,7 +86,7 @@ void display(const void* object,size_t siz)
 	}
 	
 
-	cout << setw(1) << dec;
+	cout << setw(1);
 	size_t backup = i;
 	while (i % offs != 0) {
 		cout << "   ";
@@ -111,7 +110,7 @@ void display(const void* object,size_t siz)
 	}
 
 
-
+	cout << endl;
 }
 
 
