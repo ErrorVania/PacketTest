@@ -20,13 +20,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ICMP_Header.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="general.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="IP_Header.h">
+    <ClInclude Include="Headers.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

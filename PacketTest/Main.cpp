@@ -1,6 +1,6 @@
 #include <iostream>
-#include "IP_Header.h"
-#include "ICMP_Header.h"
+#include "general.h"
+#include "Headers.h"
 
 using namespace std;
 
@@ -32,18 +32,10 @@ void scanNetwork() {
 }
 
 
-/*
-TODO: Wrapper class for IP/ICMP Header to recalc checksum after every change?
-raw sockets lol
-
-
-
-*/
 
 int main() {
-
 	IP_Header a;
-	populateHeaderDefault(&a);
+	populateDefault(&a);
 
 	a.total_len += htons(sizeof ICMP_Header);
 	a.proto = IPPROTO_ICMP;
@@ -51,8 +43,10 @@ int main() {
 	a.header_chksum = header_checksum(&a, a.ihl * 4);
 
 
+
+
 	ICMP_Header i;
-	populateICMPDefault(&i);
+	populateDefault(&i);
 
 
 
@@ -67,7 +61,7 @@ int main() {
 	cout << endl;
 	cout << "---------ICMP Header---------" << endl;
 
-	displayICMP(&i);
+	displayHeader(&i);
 	display(&i, sizeof ICMP_Header);
 
 
@@ -99,7 +93,6 @@ int main() {
 	}
 
 
-	char buffer[2048];
 
 
 
