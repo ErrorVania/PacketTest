@@ -55,11 +55,11 @@ int main() {
 
 
 
-	cout << "----------IP Header----------" << endl;
+	cout << "-------------------IP Header-------------------" << endl;
 	displayHeader(&a);
 	display(&a, sizeof IP_Header);
 	cout << endl;
-	cout << "---------ICMP Header---------" << endl;
+	cout << "------------------ICMP Header------------------" << endl;
 
 	displayHeader(&i);
 	display(&i, sizeof ICMP_Header);
@@ -74,7 +74,7 @@ int main() {
 	memcpy(packet + sizeof IP_Header, &i, sizeof ICMP_Header);
 
 	cout << endl;
-	cout << "---------IP + ICMP---------" << endl;
+	cout << "------------------IP + ICMP------------------" << endl;
 	display(packet, packsize);
 
 

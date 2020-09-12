@@ -63,16 +63,13 @@ void display(const void* object,size_t siz)
 
 	const unsigned int offs = 8;
 	unsigned char buf[offs];
-	memset(buf, 0x00, offs);
 
-
+	bool first = true;
 	cout << hex << setfill('0');
 	for (i = 0; i < siz; i++) {
 
 		if (i % offs == 0) {
-
 			if (i > 0) {
-
 				cout << "| ";
 				memcpy(buf, bytes + i - offs, offs);
 				for (int x = 0; x < offs; x++) {
@@ -84,7 +81,7 @@ void display(const void* object,size_t siz)
 					}
 				}
 			}
-			cout << endl << "0x" << setw(offs) << hex << i << " | ";
+			cout << endl << "0x" << setw(offs) << i << " | ";
 		}
 		cout << setw(2) << (unsigned int)bytes[i] << " ";
 	}
@@ -98,7 +95,12 @@ void display(const void* object,size_t siz)
 	}
 	cout << "| ";
 	memcpy(buf, bytes + siz - offs, offs);
-	for (unsigned int x = 0; x < backup % offs; x++) {
+
+	unsigned int t = backup % offs;
+	t = t == 0 ? t = 8 : t;
+
+
+	for (unsigned int x = 0; x < t; x++) {
 
 		if (isPrintable(buf[x])) {
 			cout << buf[x];
