@@ -1,9 +1,9 @@
 #include <iostream>
 #include "general.h"
 #include "Headers.h"
+#include "netio.h"
 
 using namespace std;
-
 
 inline string toaddr(ULONG addr) {
 
@@ -15,27 +15,10 @@ inline string toaddr(ULONG addr) {
 }
 
 
-void scanNetwork() {
-	uint32_t privIP, netmask;
-	ip_to_uint32(privIP,"192.168.178.31");
-	ip_to_uint32(netmask,"255.255.255.0");
-
-	ULONG start = privIP & netmask;
-	ULONG end = privIP | ~netmask;
-
-
-	for (ULONG i = htonl(start); i <= htonl(end); i++) {
-		cout << toaddr(ntohl(i)) << endl;
-	}
-	cout << endl << endl;
-}
-
-
 
 
 int main() {
 	srand(time(NULL));
-
 	//combine IP and ICMP Headers
 	IP_Header ip;
 	ICMP_Header icmp;
@@ -56,46 +39,20 @@ int main() {
 
 
 
-
-
-
-
-
-	//WSA start
-
-	WSADATA wsaData;
-	SOCKET s;
-	const int optval = 1,
-			  wsaret = WSAStartup(MAKEWORD(2, 2), &wsaData);
-
-
-	if (wsaret != 0) {
-		cout << wsaret << endl << WSAGetLastError() << endl;
-		return 1;
-	} else {
-		s = socket(AF_INET, SOCK_RAW, 0);
-		if (s == INVALID_SOCKET) {
-			cout << "Invalid socket " << WSAGetLastError() << endl;
-			return 2;
-		}
-		setsockopt(s, IPPROTO_IP, IP_HDRINCL, (const char*)&optval, sizeof optval); //define IP Header ourselves
-	}
-
-
-
+	SOCKET s = getRawSock();
 
 	//Sending the packet
 	cout << endl << "Sending packet..." << endl;
-	sockaddr_in dst;
-	dst.sin_family = AF_INET;
-	dst.sin_addr.S_un.S_addr = ip.dst;
-
-
-	const int sent = sendto(s, packet, packsize, 0, (sockaddr*)(&dst), sizeof sockaddr_in);
-	if (sent < packsize) {
+	const int sent = sendL3(s, packet, packsize);
+	if (sent < packsize)
 		cout << "sendto error: " << sent << " WSA: " << WSAGetLastError();
-	}
-	cout << dec << "Sent " << sent << " bytes" << endl;
+	else
+		cout << dec << "Sent " << sent << " bytes" << endl;
+
+
+
+
+
 
 
 
@@ -106,15 +63,12 @@ int main() {
 	int reclen = sizeof from;
 
 
-	const int recvd = recvfrom(s, recbuf, bufsize, 0, (sockaddr*)&from, &reclen);
-	if (recvd < 0) {
-		cout << "recvfrom error: " << recvd << " WSA: " << WSAGetLastError();
-		return recvd;
+	int recvd = -2;
+	while (recvd < 0) {
+		recvd = recvfrom(s, recbuf, bufsize, 0, (sockaddr*)&from, &reclen);
 	}
-
 	cout << dec << "Received " << recvd << " bytes" << endl;
 	display(recbuf, bufsize);
-
 
 
 	//splitting buffer into IP and ICMP Headers
@@ -123,6 +77,31 @@ int main() {
 	ICMP_Header* icmp2 = (ICMP_Header*)(recbuf + sizeof IP_Header);
 
 	cout << *ip2 << endl << *icmp2 << endl;
+
+
+
+	//this works! Let's scan the network...
+
+	cout << "Pinging network..." << endl;
+
+	uint32_t privIP, netmask;
+	ip_to_uint32(privIP, "192.168.178.31");
+	ip_to_uint32(netmask, "255.255.255.0");
+
+	ULONG start = privIP & netmask;
+	ULONG end = privIP | ~netmask;
+
+
+	for (ULONG i = htonl(start); i <= htonl(end); i++) {
+		cout << toaddr(ntohl(i)) << ": " << icmp_ping(s,privIP,ntohl(i)) << endl;
+	}
+	cout << endl << endl;
+
+
+
+
+
+
 
 
 	WSACleanup();

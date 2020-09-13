@@ -26,5 +26,8 @@
     <ClInclude Include="Headers.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="netio.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
