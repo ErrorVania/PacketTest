@@ -4,9 +4,8 @@
 
 using namespace std;
 
-typedef unsigned int uint;
 
-string toaddr(ULONG addr) {
+inline string toaddr(ULONG addr) {
 
 	char f[16];
 	inet_ntop(AF_INET, &addr, f, 16);
@@ -33,22 +32,27 @@ void scanNetwork() {
 
 
 
+
 int main() {
-	IP_Header a;
-	ICMP_Header i;
+	srand(time(NULL));
 
-	a.total_len += htons(sizeof ICMP_Header);
-	a.proto = IPPROTO_ICMP;
-	a.header_chksum = 0x0000;
-	a.header_chksum = header_checksum(&a, a.ihl * 4);
+	//combine IP and ICMP Headers
+	IP_Header ip;
+	ICMP_Header icmp;
+
+	ip.total_len += htons(sizeof ICMP_Header);
+	ip.proto = IPPROTO_ICMP;
+	ip.header_chksum = 0x0000;
+	ip.header_chksum = header_checksum(&ip, ip.ihl * 4);
 
 
 
-	const UINT packsize = sizeof IP_Header + sizeof ICMP_Header;
+
+	const unsigned packsize = sizeof IP_Header + sizeof ICMP_Header; //28
 	char packet[packsize];
 
-	memcpy(packet, &a, sizeof IP_Header);
-	memcpy(packet + sizeof IP_Header, &i, sizeof ICMP_Header);
+	memcpy(packet, &ip, sizeof IP_Header);
+	memcpy(packet + sizeof IP_Header, &icmp, sizeof ICMP_Header);
 
 
 
@@ -57,52 +61,70 @@ int main() {
 
 
 
+	//WSA start
 
-	cout << a;
-	display(&a, sizeof IP_Header);
-
-	cout << endl;
-
-	cout << i;
-	display(&i, sizeof ICMP_Header);
-
-	cout << endl << "------------------IP + ICMP--------------------";
-	display(packet, packsize);
+	WSADATA wsaData;
+	SOCKET s;
+	const int optval = 1,
+			  wsaret = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
 
-
-
-
-
-	/*WSADATA wsaData;
-	WSAStartup(MAKEWORD(2, 2), &wsaData);
-
-
-	SOCKET s = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-	if (s == INVALID_SOCKET) {
-		cout << "Invalid socket " << WSAGetLastError() << endl;
-		return 0;
+	if (wsaret != 0) {
+		cout << wsaret << endl << WSAGetLastError() << endl;
+		return 1;
+	} else {
+		s = socket(AF_INET, SOCK_RAW, 0);
+		if (s == INVALID_SOCKET) {
+			cout << "Invalid socket " << WSAGetLastError() << endl;
+			return 2;
+		}
+		setsockopt(s, IPPROTO_IP, IP_HDRINCL, (const char*)&optval, sizeof optval); //define IP Header ourselves
 	}
 
 
 
 
+	//Sending the packet
+	cout << endl << "Sending packet..." << endl;
+	sockaddr_in dst;
+	dst.sin_family = AF_INET;
+	dst.sin_addr.S_un.S_addr = ip.dst;
+
+
+	const int sent = sendto(s, packet, packsize, 0, (sockaddr*)(&dst), sizeof sockaddr_in);
+	if (sent < packsize) {
+		cout << "sendto error: " << sent << " WSA: " << WSAGetLastError();
+	}
+	cout << dec << "Sent " << sent << " bytes" << endl;
 
 
 
+	//getting response
+	const int bufsize = sizeof IP_Header + sizeof ICMP_Header;
+	char recbuf[bufsize];
+	sockaddr_in from;
+	int reclen = sizeof from;
+
+
+	const int recvd = recvfrom(s, recbuf, bufsize, 0, (sockaddr*)&from, &reclen);
+	if (recvd < 0) {
+		cout << "recvfrom error: " << recvd << " WSA: " << WSAGetLastError();
+		return recvd;
+	}
+
+	cout << dec << "Received " << recvd << " bytes" << endl;
+	display(recbuf, bufsize);
 
 
 
+	//splitting buffer into IP and ICMP Headers
+
+	IP_Header* ip2 = (IP_Header*)recbuf;
+	ICMP_Header* icmp2 = (ICMP_Header*)(recbuf + sizeof IP_Header);
+
+	cout << *ip2 << endl << *icmp2 << endl;
 
 
 	WSACleanup();
-
-
-
-
-	*/
-
-
-
 	return 0;
 }

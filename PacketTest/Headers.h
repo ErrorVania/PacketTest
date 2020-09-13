@@ -10,8 +10,8 @@ struct IP_Header {
 	        version : 4;
 
 #elif defined(BIGENDIAN)
-	uint8_t version : 4;
-	uint8_t ihl : 4;
+	uint8_t version : 4,
+			ihl : 4;
 #endif
 
 	uint8_t DSCP : 6,
@@ -32,20 +32,21 @@ struct IP_Header {
 		auto bytes = static_cast<const uint8_t*>((void*)&ip);
 
 		os  << "+--------------------IP Header--------------------+" << endl
-			<< "Version/IHL: 0x" << setfill('0') << setw(2) << hex << (unsigned)bytes[0] << endl
-			<< "DSCP/ECN:    0x" << setfill('0') << setw(2) << hex << (unsigned)bytes[1] << endl
-			<< "Length:      0x" << setfill('0') << setw(2) << hex << (unsigned)bytes[2] << setw(2) << (unsigned)bytes[3] << endl
-			<< "Id:          0x" << setfill('0') << setw(2) << hex << (unsigned)bytes[4] << setw(2) << (unsigned)bytes[5] << endl
-			<< "Flags/Frag:  0x" << setfill('0') << setw(2) << hex << (unsigned)bytes[6] << setw(2) << (unsigned)bytes[7] << endl
-			<< "TTL:         0x" << setfill('0') << setw(2) << hex << (unsigned)bytes[8] << endl
-			<< "Protocol:    0x" << setfill('0') << setw(2) << hex << (unsigned)bytes[9] << endl
-			<< "Checksum:    0x" << setfill('0') << setw(2) << hex << (unsigned)bytes[10] << setw(2) << (unsigned)bytes[11] << endl;
+			<< setfill('0') << hex << setw(2)
+			<< "Version/IHL: 0x" << setw(2) << (unsigned)bytes[0] << endl
+			<< "DSCP/ECN:    0x" << setw(2) << (unsigned)bytes[1] << endl
+			<< "Length:      0x" << setw(2) << (unsigned)bytes[2] << setw(2) << (unsigned)bytes[3] << endl
+			<< "Id:          0x" << setw(2) << (unsigned)bytes[4] << setw(2) << (unsigned)bytes[5] << endl
+			<< "Flags/Frag:  0x" << setw(2) << (unsigned)bytes[6] << setw(2) << (unsigned)bytes[7] << endl
+			<< "TTL:         0x" << setw(2) << (unsigned)bytes[8] << endl
+			<< "Protocol:    0x" << setw(2) << (unsigned)bytes[9] << endl
+			<< "Checksum:    0x" << setw(2) << (unsigned)bytes[10] << setw(2) << (unsigned)bytes[11] << endl;
 
 		char t[16];
 		inet_ntop(AF_INET, &ip.src, t, 16);
 		os << "Source:      " << t << endl;
 		inet_ntop(AF_INET, &ip.dst, t, 16);
-		os << "Destination: " << t << endl;
+		os << "Destination: " << t;
 		return os;
 	}
 
@@ -89,18 +90,19 @@ struct ICMP_Header {
 
 	friend ostream& operator<<(ostream& os, const ICMP_Header& icmp) {
 		os << "+-------------------ICMP Header-------------------+" << endl;
+		os << setfill('0') << hex;
 
-		os << "Type:        0x" << setfill('0') << setw(2) << hex << (unsigned)icmp.Type << endl;
-		os << "Code:        0x" << setfill('0') << setw(2) << hex << (unsigned)icmp.Code << endl;
-		os << "Checksum:    0x" << setfill('0') << setw(4) << hex << icmp.Checksum << endl;
-		os << "Rest:        0x" << setfill('0') << setw(8) << hex << icmp.rest;
+		os << "Type:        0x" << setw(2) << (unsigned)icmp.Type << endl;
+		os << "Code:        0x" << setw(2) << (unsigned)icmp.Code << endl;
+		os << "Checksum:    0x" << setw(4) << icmp.Checksum << endl;
+		os << "Rest:        0x" << setw(8) << icmp.rest;
 		return os;
 	}
 
 	ICMP_Header() {
 		Type = 8;
 		Code = 0;
-		rest = 0;
+		rest = htons(rand() % 0xffff);
 		Checksum = 0;
 		Checksum = header_checksum(this, sizeof ICMP_Header);
 	}

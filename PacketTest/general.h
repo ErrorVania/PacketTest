@@ -1,5 +1,4 @@
 #pragma once
-#define _WINSOCK_DEPRACATED_NO_WARNINGS
 #include <WS2tcpip.h>
 #include <iostream>
 #include <iomanip>
@@ -46,7 +45,7 @@ uint16_t header_checksum(void* vdata, size_t length) {
 
 
 
-bool isPrintable(unsigned char c) {
+inline bool isPrintable(unsigned char c) {
 	if (c == 0x00)
 		return false;
 	auto b = static_cast<signed char>(c);
@@ -82,7 +81,7 @@ void display(const void* object,size_t siz)
 			}
 			cout << endl << "0x" << setw(offs) << i << " | ";
 		}
-		cout << setw(2) << (unsigned int)bytes[i] << " ";
+		cout << setw(2) << (unsigned)bytes[i] << " ";
 	}
 	
 
@@ -95,11 +94,11 @@ void display(const void* object,size_t siz)
 	cout << "| ";
 	memcpy(buf, bytes + siz - offs, offs);
 
-	unsigned int t = backup % offs;
-	t = t == 0 ? t = 8 : t;
+	unsigned t = backup % offs;
+	t = t == 0 ? t = 8 : backup % offs;
 
 
-	for (unsigned int x = 0; x < t; x++) {
+	for (unsigned x = 0; x < t; x++) {
 
 		if (isPrintable(buf[x])) {
 			cout << buf[x];
@@ -117,8 +116,12 @@ void display(const void* object,size_t siz)
 
 
 
-
 void ip_to_uint32(uint32_t& x, const char* buf) {
+	IN_ADDR ia;
+
+	inet_pton(AF_INET, buf, &ia);
+	x = ia.S_un.S_addr;
+}void ip_to_ulong(unsigned long& x, const char* buf) {
 	IN_ADDR ia;
 
 	inet_pton(AF_INET, buf, &ia);
