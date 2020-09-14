@@ -46,57 +46,103 @@ const int sendL3(SOCKET sock, const char* buffer, unsigned int buflen, int flags
 
 
 
-bool icmp_ping(SOCKET rawsock,uint32_t src, uint32_t dst) {
-	IP_Header ip;
-	ICMP_Header icmp;
 
-	ip.dst = dst;
-	ip.src = src;
+class ICMP_Pinger {
+private:
+	const unsigned packetsize = sizeof IP_Header + sizeof ICMP_Header;
+	char* packet = nullptr;
+	SOCKET rawsock = INVALID_SOCKET;
+	IP_Header* ip = nullptr;
+	ICMP_Header* icmp = nullptr;
 
-	ip.total_len += htons(sizeof ICMP_Header);
-	ip.proto = IPPROTO_ICMP;
-	ip.header_chksum = 0x0000;
-	ip.header_chksum = header_checksum(&ip, ip.ihl * 4);
-
-
-
-
-	const unsigned packsize = sizeof IP_Header + sizeof ICMP_Header;
-	char packet[packsize];
-
-	memcpy(packet, &ip, sizeof IP_Header);
-	memcpy(packet + sizeof IP_Header, &icmp, sizeof ICMP_Header);
-
-
-	const int sent = sendL3(rawsock, packet, packsize);
-	if (sent < packsize)
-		return false;
-	
-
-	uint32_t icmp_id = 0;
-
-
-
-
-
-
-	//char recbuf[packsize];
-	sockaddr_in from;
-	int reclen = sizeof from;
-
-
-	int recvd = -2;
-	unsigned limit = 0;
-
-	uint8_t type = 0xff;
-	for (limit = 0xffffffff; icmp_id != icmp.rest && limit <= 0; limit--) {
-		recvd = recvfrom(rawsock, packet, packsize, 0, (sockaddr*)&from, &reclen);
-		icmp_id = ((ICMP_Header*)(packet + sizeof IP_Header))->rest;
-		type = ((ICMP_Header*)(packet + sizeof IP_Header))->Type;
+	void reroll_Id() {
+		icmp->rest = htons(rand() % 0xffff);
+	}
+	void recalc_chksums() {
+		ip->header_chksum = 0x0000;
+		icmp->Checksum = 0x0000;
+		ip->header_chksum = header_checksum(ip, ip->ihl * 4);
+		icmp->Checksum = header_checksum(icmp, sizeof ICMP_Header);
 	}
 
-	if (limit > 0 && limit == 0)
-		return true;
+public:
 
-	return false;
+	ICMP_Pinger() {
+		packet = static_cast<char*>(malloc(packetsize));
+		rawsock = getRawSock();
+		const uint32_t timeout = 1000;
+		setsockopt(rawsock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof timeout);
+
+
+		ip = (IP_Header*)packet;
+		icmp = (ICMP_Header*)(packet + sizeof IP_Header);
+
+
+
+		IP_Header _ip;
+		ICMP_Header _icmp;
+
+		_ip.dst = 0x00000000;
+		_ip.src = 0x00000000;
+
+		_ip.total_len += htons(sizeof ICMP_Header);
+		_ip.proto = IPPROTO_ICMP;
+		_ip.header_chksum = 0x0000;
+		_ip.header_chksum = header_checksum(&_ip, _ip.ihl * 4);
+
+		memcpy(packet, &_ip, sizeof IP_Header);
+		memcpy(packet + sizeof IP_Header, &_icmp, sizeof ICMP_Header);
+
+
+
+	}
+	~ICMP_Pinger() {
+		delete[] packet;
+		closesocket(rawsock);
+	}
+	
+	
+	
+	bool ping(uint32_t dst, uint32_t src) {
+		ip->dst = dst;
+		ip->src = src;
+		reroll_Id();
+		recalc_chksums();
+
+
+
+		const int sent = sendL3(rawsock, packet, packetsize);
+		if (sent < packetsize)
+			return false;
+
+
+		uint32_t icmp_id = 0;
+
+		sockaddr_in from;
+		int reclen = sizeof from;
+
+
+		int recvd = -2;
+
+		while (icmp_id != icmp->rest) {
+			recvd = recvfrom(rawsock, packet, packetsize, 0, (sockaddr*)&from, &reclen);
+			if (recvd == SOCKET_ERROR) {
+				if (WSAGetLastError() == WSAETIMEDOUT)
+					return false;
+				else
+					return false;
+			}
+			icmp_id = ((ICMP_Header*)(packet + sizeof IP_Header))->rest;
+		}
+
+		return true;
 }
+	bool ping(const char* dst, const char* src) {
+		uint32_t dst32, src32;
+		ip_to_uint32(dst32, dst);
+		ip_to_uint32(src32, src);
+		return ping(dst32, src32);
+	}
+
+
+};

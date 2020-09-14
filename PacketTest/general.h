@@ -116,14 +116,17 @@ void display(const void* object,size_t siz)
 
 
 
-void ip_to_uint32(uint32_t& x, const char* buf) {
+uint32_t ip_to_uint32(uint32_t& x, const char* buf) {
 	IN_ADDR ia;
 
 	inet_pton(AF_INET, buf, &ia);
 	x = ia.S_un.S_addr;
-}void ip_to_ulong(unsigned long& x, const char* buf) {
+	return x;
+}
+unsigned long ip_to_ulong(unsigned long& x, const char* buf) {
 	IN_ADDR ia;
 
 	inet_pton(AF_INET, buf, &ia);
 	x = ia.S_un.S_addr;
+	return x;
 }

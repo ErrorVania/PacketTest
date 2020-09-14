@@ -81,7 +81,7 @@ int main() {
 
 
 	//this works! Let's scan the network...
-
+	ICMP_Pinger pinger;
 	cout << "Pinging network..." << endl;
 
 	uint32_t privIP, netmask;
@@ -93,10 +93,9 @@ int main() {
 
 
 	for (ULONG i = htonl(start); i <= htonl(end); i++) {
-		cout << toaddr(ntohl(i)) << ": " << icmp_ping(s,privIP,ntohl(i)) << endl;
+		cout << toaddr(ntohl(i)) << ": " << pinger.ping(ntohl(i),privIP) << endl;
 	}
 	cout << endl << endl;
-
 
 
 
