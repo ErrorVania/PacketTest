@@ -142,9 +142,12 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="defs.h" />
     <ClInclude Include="general.h" />
-    <ClInclude Include="Headers.h" />
+    <ClInclude Include="icmp_hdr.h" />
+    <ClInclude Include="ip_hdr.h" />
     <ClInclude Include="netio.h" />
+    <ClInclude Include="Raw.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

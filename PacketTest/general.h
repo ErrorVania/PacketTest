@@ -1,16 +1,12 @@
 #pragma once
+
 #include <WS2tcpip.h>
 #include <iostream>
 #include <iomanip>
+#include "defs.h"
 #pragma comment(lib,"Ws2_32.lib")
 
-#define IP_FLAG_NONE 0
-#define IP_FLAG_DF 2
-#define IP_FLAG_MF 1
-#define IP_FLAG_DFMF 3
-
 using namespace std;
-
 uint16_t header_checksum(void* vdata, size_t length) {
 	// Cast the data pointer to one that can be indexed.
 	char* data = (char*)vdata;
@@ -53,23 +49,21 @@ inline bool isPrintable(unsigned char c) {
 }
 
 
-
-void display(const void* object,size_t siz)
+//right display is broken, displays wrong bytes
+void display(const void* object, size_t siz, const unsigned offs = 8)
 {
 	auto bytes = static_cast<const unsigned char*>(object);
 	size_t i;
 
-	const unsigned int offs = 8;
-	unsigned char buf[offs];
+	unsigned char* buf = (unsigned char*)malloc(offs);
 
-	bool first = true;
-	cout << hex << setfill('0');
+	cout << std::hex << std::setfill('0');
 	for (i = 0; i < siz; i++) {
 
 		if (i % offs == 0) {
 			if (i > 0) {
 				cout << "| ";
-				memcpy(buf, bytes + i - offs, offs);
+				/*memcpy(buf, bytes + i - offs, offs);
 				for (int x = 0; x < offs; x++) {
 					if (isPrintable(buf[x]) != 0) {
 						cout << buf[x];
@@ -77,28 +71,28 @@ void display(const void* object,size_t siz)
 					else {
 						cout << ".";
 					}
-				}
+				}*/
 			}
-			cout << endl << "0x" << setw(offs) << i << " | ";
+			cout << std::endl << "0x" << std::setw(offs) << i << " | ";
 		}
-		cout << setw(2) << (unsigned)bytes[i] << " ";
+		cout << std::setw(2) << (unsigned)bytes[i] << " ";
 	}
-	
 
-	cout << setw(1);
+
+	cout << std::setw(1);
 	size_t backup = i;
 	while (i % offs != 0) {
 		cout << "   ";
 		i++;
 	}
 	cout << "| ";
-	memcpy(buf, bytes + siz - offs, offs);
+	//memcpy(buf, bytes + siz - offs, offs);
 
 	unsigned t = backup % offs;
 	t = t == 0 ? t = 8 : backup % offs;
 
 
-	for (unsigned x = 0; x < t; x++) {
+	/*for (unsigned x = 0; x < t; x++) {
 
 		if (isPrintable(buf[x])) {
 			cout << buf[x];
@@ -106,10 +100,10 @@ void display(const void* object,size_t siz)
 		else {
 			cout << ".";
 		}
-	}
+	}*/
 
-
-	cout << endl;
+	free(buf);
+	cout << std::endl;
 }
 
 
@@ -122,6 +116,12 @@ uint32_t ip_to_uint32(uint32_t& x, const char* buf) {
 	inet_pton(AF_INET, buf, &ia);
 	x = ia.S_un.S_addr;
 	return x;
+}
+uint32_t ip(const char* buf) {
+	IN_ADDR ia;
+
+	inet_pton(AF_INET, buf, &ia);
+	return ia.S_un.S_addr;
 }
 unsigned long ip_to_ulong(unsigned long& x, const char* buf) {
 	IN_ADDR ia;
