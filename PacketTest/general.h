@@ -4,9 +4,7 @@
 #include <iostream>
 #include <iomanip>
 #include "defs.h"
-#pragma comment(lib,"Ws2_32.lib")
 
-using namespace std;
 uint16_t header_checksum(void* vdata, size_t length) {
 	// Cast the data pointer to one that can be indexed.
 	char* data = (char*)vdata;
@@ -52,17 +50,17 @@ inline bool isPrintable(unsigned char c) {
 //right display is broken, displays wrong bytes
 void display(const void* object, size_t siz, const unsigned offs = 8)
 {
-	auto bytes = static_cast<const unsigned char*>(object);
+	auto bytes = static_cast<const uint8_t*>(object);
 	size_t i;
 
-	unsigned char* buf = (unsigned char*)malloc(offs);
+	uint8_t* buf = (uint8_t*)malloc(offs);
 
-	cout << std::hex << std::setfill('0');
+	std::cout << std::hex << std::setfill('0');
 	for (i = 0; i < siz; i++) {
 
 		if (i % offs == 0) {
 			if (i > 0) {
-				cout << "| ";
+				std::cout << "| ";
 				/*memcpy(buf, bytes + i - offs, offs);
 				for (int x = 0; x < offs; x++) {
 					if (isPrintable(buf[x]) != 0) {
@@ -73,19 +71,19 @@ void display(const void* object, size_t siz, const unsigned offs = 8)
 					}
 				}*/
 			}
-			cout << std::endl << "0x" << std::setw(offs) << i << " | ";
+			std::cout << std::endl << "0x" << std::setw(offs) << i << " | ";
 		}
-		cout << std::setw(2) << (unsigned)bytes[i] << " ";
+		std::cout << std::setw(2) << (unsigned)bytes[i] << " ";
 	}
 
 
-	cout << std::setw(1);
+	std::cout << std::setw(1);
 	size_t backup = i;
 	while (i % offs != 0) {
-		cout << "   ";
+		std::cout << "   ";
 		i++;
 	}
-	cout << "| ";
+	std::cout << "| ";
 	//memcpy(buf, bytes + siz - offs, offs);
 
 	unsigned t = backup % offs;
@@ -103,30 +101,19 @@ void display(const void* object, size_t siz, const unsigned offs = 8)
 	}*/
 
 	free(buf);
-	cout << std::endl;
+	std::cout << std::endl;
 }
 
 
 
-
-
-uint32_t ip_to_uint32(uint32_t& x, const char* buf) {
-	IN_ADDR ia;
-
-	inet_pton(AF_INET, buf, &ia);
-	x = ia.S_un.S_addr;
-	return x;
-}
-uint32_t ip(const char* buf) {
-	IN_ADDR ia;
-
+uint32_t toip(const char* buf) {
+	in_addr ia;
 	inet_pton(AF_INET, buf, &ia);
 	return ia.S_un.S_addr;
 }
-unsigned long ip_to_ulong(unsigned long& x, const char* buf) {
-	IN_ADDR ia;
+std::string toaddr(uint32_t addr) {
+	char f[16];
+	inet_ntop(AF_INET, &addr, f, 16);
+	return std::string(f);
 
-	inet_pton(AF_INET, buf, &ia);
-	x = ia.S_un.S_addr;
-	return x;
 }

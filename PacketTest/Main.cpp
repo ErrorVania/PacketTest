@@ -4,8 +4,8 @@
 #include "ip_hdr.h"
 #include "icmp_hdr.h"
 
-
 using std::cout;
+using std::endl;
 
 inline const std::string toaddr(ULONG addr) {
 
@@ -21,20 +21,19 @@ inline const std::string toaddr(ULONG addr) {
 
 int main() {
 	srand(static_cast<unsigned>(time(NULL)));
+
+
+	cout << icmp_ping(getRawSock(true, 1000), toip("8.8.8.8"), toip("192.168.178.31"));
+
+
+	return 0;
 	//combine IP and ICMP Headers
 	ip_hdr iphdr;
 	icmp_hdr icmphdr;
 
-	//_ip_hdr* i = iphdr.getHeader();
-
-	iphdr.p_hdr->total_len += htons(sizeof _icmp_hdr);
-	iphdr.p_hdr->proto = IPPROTO_ICMP;
-	iphdr.p_hdr->ttl = 64;
-	iphdr.p_hdr->src = ip("192.168.178.31");
-	iphdr.p_hdr->dst = ip("192.168.178.1");
-
-	iphdr.p_hdr->header_chksum = 0;
-	iphdr.p_hdr->header_chksum = header_checksum(iphdr.p_hdr, iphdr.p_hdr->ihl * 4);
+	
+	iphdr.p_hdr->src = toip("192.168.178.31");
+	iphdr.p_hdr->dst = toip("192.168.178.1");
 
 	cout << iphdr << endl << icmphdr << endl;
 
@@ -53,7 +52,7 @@ int main() {
 	cout << "Generated Packet:" << endl;
 	display(buff.get(), siz);
 
-	SOCKET s = getRawSock(true);
+	SOCKET s = getRawSock(true,1000);
 
 	//Sending the packet
 	cout << endl << "Sending packet..." << endl;

@@ -8,32 +8,26 @@ class Raw {
 
 
 protected:
-	virtual void writeData(vector<char>& t) {
+	virtual void writeData(std::vector<char>& t) {
 		t.push_back(0);
 	}
 
-	vector<char> data;
+	std::vector<char> data;
 
 public:
-
-
 
 	Raw() {
 
 	}
 
-
-	vector<char>& getraw() {
+	std::vector<char>& getraw() {
 		return data;
 	}
 
 	Raw operator+(Raw& other) {
-		vector<char> a, b;
+		std::vector<char> a, b;
 		this->writeData(a);
 		other.writeData(b);
-
-		//display(a.data(), a.size());
-		//display(b.data(), b.size());
 
 
 		data.reserve(a.size() + b.size());

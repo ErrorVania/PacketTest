@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "Raw.h"
+#include "icmp_hdr.h"
 
-using std::vector;
 
 struct _ip_hdr {
 #ifdef LITTLEENDIAN
@@ -36,7 +36,7 @@ protected:
 	char options[128];
 
 
-	void writeData(vector<char>& t) {
+	void writeData(std::vector<char>& t) {
 
 		const int siz = hdr.ihl * 4;
 		t.resize(siz);
@@ -66,29 +66,37 @@ public:
 	}
 
 
-	/*_ip_hdr* getHeader() {
+	_ip_hdr* getHeader() {
 		return &hdr;
-	}*/
+	}
 	friend std::ostream& operator<<(std::ostream& os, const ip_hdr& ip) {
 		auto bytes = static_cast<const uint8_t*>((void*)&(ip.hdr));
 
-		os << "+--------------------IP Header--------------------+" << endl
-			<< setfill('0') << hex << setw(2)
-			<< "Version/IHL: 0x" << setw(2) << (unsigned)bytes[0] << endl
-			<< "DSCP/ECN:    0x" << setw(2) << (unsigned)bytes[1] << endl
-			<< "Length:      0x" << setw(2) << (unsigned)bytes[2] << setw(2) << (unsigned)bytes[3] << endl
-			<< "Id:          0x" << setw(2) << (unsigned)bytes[4] << setw(2) << (unsigned)bytes[5] << endl
-			<< "Flags/Frag:  0x" << setw(2) << (unsigned)bytes[6] << setw(2) << (unsigned)bytes[7] << endl
-			<< "TTL:         0x" << setw(2) << (unsigned)bytes[8] << endl
-			<< "Protocol:    0x" << setw(2) << (unsigned)bytes[9] << endl
-			<< "Checksum:    0x" << setw(2) << (unsigned)bytes[10] << setw(2) << (unsigned)bytes[11] << endl;
+		os << "+--------------------IP Header--------------------+" << std::endl
+			<< std::setfill('0') << std::hex << std::setw(2)
+			<< "Version/IHL: 0x" << std::setw(2) << (unsigned)bytes[0] << std::endl
+			<< "DSCP/ECN:    0x" << std::setw(2) << (unsigned)bytes[1] << std::endl
+			<< "Length:      0x" << std::setw(2) << (unsigned)bytes[2] << std::setw(2) << (unsigned)bytes[3] << std::endl
+			<< "Id:          0x" << std::setw(2) << (unsigned)bytes[4] << std::setw(2) << (unsigned)bytes[5] << std::endl
+			<< "Flags/Frag:  0x" << std::setw(2) << (unsigned)bytes[6] << std::setw(2) << (unsigned)bytes[7] << std::endl
+			<< "TTL:         0x" << std::setw(2) << (unsigned)bytes[8] << std::endl
+			<< "Protocol:    0x" << std::setw(2) << (unsigned)bytes[9] << std::endl
+			<< "Checksum:    0x" << std::setw(2) << (unsigned)bytes[10] << std::setw(2) << (unsigned)bytes[11] << std::endl;
 
 		char t[16];
 		inet_ntop(AF_INET, &ip.hdr.src, t, 16);
-		os << "Source:      " << t << endl;
+		os << "Source:      " << t << std::endl;
 		inet_ntop(AF_INET, &ip.hdr.dst, t, 16);
-		os << "Destination: " << t;
+		os << "Destination: " << t << std::endl;
 		return os;
+	}
+
+	Raw operator+(icmp_hdr& other) {
+		hdr.proto = IPPROTO_ICMP;
+		hdr.ttl = 64;
+		hdr.total_len += htons(sizeof _icmp_hdr);
+
+		return *static_cast<Raw*>(this) + other;
 	}
 
 
