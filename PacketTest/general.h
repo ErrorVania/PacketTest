@@ -117,3 +117,24 @@ std::string toaddr(uint32_t addr) {
 	return std::string(f);
 
 }
+
+
+
+
+
+
+
+std::tuple<uint32_t, uint32_t> getIPInfo() {
+	SOCKET s = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+
+	icmp_hdr i;
+	
+
+
+
+
+
+
+
+	return std::make_tuple(0, 0);
+}
