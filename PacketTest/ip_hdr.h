@@ -1,11 +1,11 @@
 #pragma once
-#include "general.h"
 #include <iostream>
 #include <vector>
 
 #include "Raw.h"
 #include "icmp_hdr.h"
-
+#include "chksum.h"
+#include "endianness.h"
 
 struct _ip_hdr {
 #ifdef LITTLEENDIAN
@@ -48,8 +48,9 @@ protected:
 	}
 
 public:
-	_ip_hdr* const p_hdr = &hdr;
+	_ip_hdr* p_hdr;
 	ip_hdr() {
+		p_hdr = &hdr;
 		memset(options, 0, 128);
 		hdr.version = 4;
 		hdr.ihl = 5;

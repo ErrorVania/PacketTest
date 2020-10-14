@@ -1,7 +1,6 @@
 #pragma once
-#include "general.h"
 #include "Raw.h"
-
+#include "chksum.h"
 
 
 struct _icmp_hdr {
