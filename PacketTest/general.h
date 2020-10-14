@@ -1,9 +1,15 @@
 #pragma once
 
-#include <WS2tcpip.h>
+#include <arpa/inet.h>
 #include <iostream>
 #include <iomanip>
 #include "defs.h"
+
+#ifdef __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define BIGENDIAN
+#else
+#define LITTLEENDIAN
+#endif
 
 uint16_t header_checksum(void* vdata, size_t length) {
 	// Cast the data pointer to one that can be indexed.
@@ -102,39 +108,4 @@ void display(const void* object, size_t siz, const unsigned offs = 8)
 
 	free(buf);
 	std::cout << std::endl;
-}
-
-
-
-uint32_t toip(const char* buf) {
-	in_addr ia;
-	inet_pton(AF_INET, buf, &ia);
-	return ia.S_un.S_addr;
-}
-std::string toaddr(uint32_t addr) {
-	char f[16];
-	inet_ntop(AF_INET, &addr, f, 16);
-	return std::string(f);
-
-}
-
-
-
-
-
-
-
-std::tuple<uint32_t, uint32_t> getIPInfo() {
-	SOCKET s = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-
-	icmp_hdr i;
-	
-
-
-
-
-
-
-
-	return std::make_tuple(0, 0);
 }

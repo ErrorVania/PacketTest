@@ -1,36 +1,23 @@
 #pragma once
 #include <tuple>
+#include <sys/socket.h>
+#include <exception>
 #include "general.h"
 #include "ip_hdr.h"
 #include "icmp_hdr.h"
-#pragma comment(lib,"Ws2_32.lib")
 
 SOCKET getRawSock(bool ip_hdrincl, int recvtimeout = 0) {
-
-	WSADATA wsaData;
-	SOCKET s;
-	const int wsaret = WSAStartup(MAKEWORD(2, 2), &wsaData);
-
-
-	if (wsaret != 0) {
-		std::cout << wsaret << std::endl << WSAGetLastError() << std::endl;
-		return 1;
+	int s = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+	if (s == INVALID_SOCKET) {
+		return INVALID_SOCKET;
 	}
-	else {
-		s = socket(AF_INET, SOCK_RAW, 0);
-		if (s == INVALID_SOCKET) {
-			std::cout << "Invalid socket " << WSAGetLastError() << std::endl;
-			return 2;
-		}
-		if (ip_hdrincl) {
-			const int optval = 1;
-			setsockopt(s, IPPROTO_IP, IP_HDRINCL, (const char*)&optval, sizeof optval); //define IP Header ourselves
-		}
-		if (recvtimeout > 0) {
-			int t = recvtimeout;
-			setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (const char*)&t, sizeof t);
-
-		}
+	if (ip_hdrincl) {
+		const int v = 1;
+		setsockopt(s,IPPROTO_IP,IP_HDRINCL,&v,sizeof(v));
+	}
+	if (recvtimeout > 0) {
+		const int v = recvtimeout;
+		setsockopt(s,SOL_SOCKET,SO_RCVTIMEO,&v,sizeof(v));
 	}
 	return s;
 }
@@ -39,40 +26,27 @@ int sendL3(SOCKET sock, const void* buffer, unsigned int buflen, int flags = 0, 
 
 	sockaddr_in dst;
 	dst.sin_family = fam;
-	dst.sin_addr.S_un.S_addr = ((_ip_hdr*)buffer)->dst;
-
-	DWORD hdr = 0;
-	int len = sizeof hdr;
+	// dst.sin_addr.S_un.S_addr = ((_ip_hdr*)buffer)->dst;
+	dst.sin_addr.s_addr = ((_ip_hdr*)buffer)->dst;
+	
+	unsigned int hdr = 0,
+				len = sizeof(hdr);
 
 	getsockopt(sock, IPPROTO_IP, IP_HDRINCL, (char*)&hdr, &len);
 	if (hdr >= 0) {
-		return sendto(sock, (const char*)buffer, buflen, flags, (sockaddr*)(&dst), sizeof sockaddr_in);
+		return sendto(sock, (const char*)buffer, buflen, flags, (sockaddr*)(&dst), sizeof(sockaddr_in));
 	}
-	throw std::exception("not L3");
+	throw std::runtime_error("not l3");
 	return 0;
 }
 int sendL3(SOCKET sock, Raw buffer, int flags = 0, ADDRESS_FAMILY fam = AF_INET) {
-
-
-
+	
 	auto tup = buffer.getBuffer();
 	std::shared_ptr<char> sh_buffer(std::get<char*>(tup));
 	unsigned siz = std::get<unsigned>(tup);
 
 
-	sockaddr_in dst;
-	dst.sin_family = fam;
-	dst.sin_addr.S_un.S_addr = ((_ip_hdr*)sh_buffer.get())->dst;
-
-	DWORD hdr = 0;
-	int len = sizeof hdr;
-
-	getsockopt(sock, IPPROTO_IP, IP_HDRINCL, (char*)&hdr, &len);
-	if (hdr >= 0) {
-		return sendto(sock, sh_buffer.get(), siz, flags, (sockaddr*)(&dst), sizeof sockaddr_in);
-	}
-	throw std::exception("not L3");
-	return 0;
+	sendL3(sock,sh_buffer.get(),siz,0,fam);
 }
 
 
@@ -126,26 +100,4 @@ bool icmp_ping(SOCKET s, uint32_t dst, uint32_t src, int retries = 4) {
 			}
 		}
 	}
-}
-
-
-
-
-//WIP
-std::tuple<uint32_t, uint32_t> getIPInfo() {
-	SOCKET s = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-
-	sockaddr_in dst;
-	dst.sin_family = AF_INET;
-	dst.sin_addr.S_un.S_addr = toip("");
-	icmp_hdr i;
-
-	sendto(s, (const char*)i.p_hdr, sizeof _icmp_hdr, 0,(sockaddr*)(&dst), sizeof sockaddr_in);
-
-
-
-
-
-
-	return std::make_tuple(0, 0);
 }

@@ -94,7 +94,7 @@ public:
 	Raw operator+(icmp_hdr& other) {
 		hdr.proto = IPPROTO_ICMP;
 		hdr.ttl = 64;
-		hdr.total_len += htons(sizeof _icmp_hdr);
+		hdr.total_len += htons(sizeof(_icmp_hdr));
 
 		return *static_cast<Raw*>(this) + other;
 	}

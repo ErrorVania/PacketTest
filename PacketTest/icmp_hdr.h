@@ -18,12 +18,12 @@ protected:
 
 
 	void writeData(std::vector<char>& t) {
-		const int siz = sizeof _icmp_hdr;
+		const int siz = sizeof(_icmp_hdr);
 
 		t.resize(siz);
 
 		hdr.Checksum = 0;
-		hdr.Checksum = header_checksum(&hdr, sizeof _icmp_hdr);
+		hdr.Checksum = header_checksum(&hdr, sizeof(_icmp_hdr));
 
 		memcpy(t.data(), &hdr, siz);
 
@@ -37,7 +37,7 @@ public:
 		hdr.Code = 0;
 		hdr.rest = htons(rand() % 0xffff);
 		hdr.Checksum = 0;
-		hdr.Checksum = header_checksum(this, sizeof _icmp_hdr);
+		hdr.Checksum = header_checksum(this, sizeof(_icmp_hdr));
 	}
 	_icmp_hdr* getHeader() {
 		return &hdr;
